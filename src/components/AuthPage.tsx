@@ -14,14 +14,21 @@ export function AuthPage() {
     setError(null);
     setLoading(true);
 
+    const normalizedEmail = email.trim();
+    const normalizedPassword = password.trim();
+
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(normalizedEmail, normalizedPassword);
       if (error) {
-        setError(error.message === 'Invalid login credentials'
-          ? 'Credenciales incorrectas. Verifique su correo y contraseña.'
-          : error.message);
+        const message = error.message || 'No se pudo iniciar sesión';
+        setError(
+          message.includes('Invalid login credentials') || message.includes('invalid_grant')
+            ? 'Credenciales incorrectas. Verifique su correo y contraseña.'
+            : message
+        );
       }
-    } catch {
+    } catch (err) {
+      console.error('Login failed:', err);
       setError('Ha ocurrido un error inesperado');
     } finally {
       setLoading(false);
