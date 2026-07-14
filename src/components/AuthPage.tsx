@@ -21,10 +21,13 @@ export function AuthPage() {
       const { error } = await signIn(normalizedEmail, normalizedPassword);
       if (error) {
         const message = error.message || 'No se pudo iniciar sesión';
+        const isConfigProblem = message.includes('configured') || message.includes('VITE_SUPABASE') || message.includes('Supabase');
         setError(
           message.includes('Invalid login credentials') || message.includes('invalid_grant')
             ? 'Credenciales incorrectas. Verifique su correo y contraseña.'
-            : message
+            : isConfigProblem
+              ? 'La app no está configurada correctamente con Supabase. Revise las variables de entorno del deploy.'
+              : message
         );
       }
     } catch (err) {
