@@ -1,6 +1,6 @@
 import { Invoice } from '../types';
 import { X, Calendar, Building2, Hash, DollarSign, FileText, ExternalLink, AlertCircle } from 'lucide-react';
-import { formatCurrency, formatDateForDisplay, getStatusColor } from '../lib/utils';
+import { formatCurrency, formatDateForDisplay } from '../lib/utils';
 
 interface InvoiceDetailModalProps {
   invoice: Invoice;

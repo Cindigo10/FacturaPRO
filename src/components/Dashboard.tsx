@@ -12,7 +12,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { DashboardStats, Invoice } from '../types';
+import { DashboardStats } from '../types';
 import { formatCurrency, formatDateForDisplay } from '../lib/utils';
 
 const COLORS = ['#1e3a5f', '#4f46e5', '#a855f7', '#ec4899', '#f59e0b', '#10b981'];
@@ -187,7 +187,7 @@ export function Dashboard() {
                     borderRadius: '12px',
                     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                   }}
-                  formatter={(value: number) => [formatCurrency(value), 'Monto']}
+                  formatter={(value) => [formatCurrency(Number(value ?? 0)), 'Monto']}
                 />
                 <Bar dataKey="amount" fill="#1e3a5f" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -215,7 +215,7 @@ export function Dashboard() {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={({ name }) => name.substring(0, 15)}
+                  label={({ name }) => (typeof name === 'string' ? name.substring(0, 15) : '')}
                   labelLine={false}
                 >
                   {stats.invoicesByProvider.map((_, index) => (
@@ -229,7 +229,7 @@ export function Dashboard() {
                     borderRadius: '12px',
                     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                   }}
-                  formatter={(value: number) => [formatCurrency(value), 'Total']}
+                  formatter={(value) => [formatCurrency(Number(value ?? 0)), 'Total']}
                 />
               </PieChart>
             </ResponsiveContainer>

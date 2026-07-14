@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { AuditLog } from '../types';
-import { Clock, User, FileText, AlertCircle, CheckCircle2, Trash2, Edit2, Plus, Loader2 } from 'lucide-react';
-import { formatDateForDisplay } from '../lib/utils';
+import { Clock, User, FileText, AlertCircle, Trash2, Edit2, Plus, Loader2 } from 'lucide-react';
 
 export default function History() {
   const { user } = useAuth();

@@ -1,27 +1,99 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { User } from '../types';
-
-// Mock user for development - bypasses login
-const mockUser: User = {
-  id: '26aadc63-f3ba-4254-b43f-7c4369d6d7c0',
-  email: 'kaitlynperez1905@gmail.com',
-  fullName: 'Kaitlyn Perez',
-  role: 'admin',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signOut: () => void;
+  signIn: (email: string, password: string) => Promise<{ error: { message: string } | null }>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function mapUser(supabaseUser: SupabaseUser, profile: any | null): User {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email ?? '',
+    fullName: profile?.full_name || supabaseUser.user_metadata?.full_name || '',
+    role: profile?.role || 'consulta',
+    createdAt: profile?.created_at || new Date().toISOString(),
+    updatedAt: profile?.updated_at || new Date().toISOString(),
+  };
+}
+
+async function loadProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('full_name, role, created_at, updated_at')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return data;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        const profile = await loadProfile(session.user.id);
+        setUser(mapUser(session.user, profile));
+      } else {
+        setUser(null);
+      }
+
+      setLoading(false);
+    };
+
+    initAuth();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const profile = await loadProfile(session.user.id);
+        setUser(mapUser(session.user, profile));
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (data.session?.user) {
+      const profile = await loadProfile(data.session.user.id);
+      setUser(mapUser(data.session.user, profile));
+    }
+
+    return { error: error ? { message: error.message } : null };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user: mockUser, loading: false, signOut: () => {} }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

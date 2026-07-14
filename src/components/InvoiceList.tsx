@@ -21,6 +21,7 @@ import {
 import * as XLSX from 'xlsx';
 import { formatCurrency, formatDateForDisplay, getStatusColor } from '../lib/utils';
 import InvoiceDetailModal from './InvoiceDetailModal';
+import InvoiceForm from './InvoiceForm';
 
 export default function InvoiceList() {
   const { user } = useAuth();

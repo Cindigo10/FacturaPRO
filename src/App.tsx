@@ -6,12 +6,13 @@ import History from './components/History';
 import { Layout } from './components/Layout';
 import { Loader2 } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthPage } from './components/AuthPage';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 flex items-center justify-center">
         <div className="text-center">
@@ -20,6 +21,10 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return <AuthPage />;
   }
 
   const renderPage = () => {
