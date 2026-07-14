@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { getSupabaseConfigError, isSupabaseReady, supabase } from '../lib/supabase';
 import { User } from '../types';
 
 interface AuthContextType {
@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
+      if (!isSupabaseReady()) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -74,6 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    const configError = getSupabaseConfigError();
+    if (configError) {
+      return { error: { message: configError } };
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
