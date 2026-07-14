@@ -27,7 +27,11 @@ export function AuthPage() {
             ? 'Credenciales incorrectas. Verifique su correo y contraseña.'
             : isConfigProblem
               ? 'La app no está configurada correctamente con Supabase. Revise las variables de entorno del deploy.'
-              : message
+              : message.includes('Email not confirmed')
+                ? 'No se pudo completar el inicio de sesión. Intenta de nuevo.'
+                : message.includes('Email logins are disabled')
+                  ? 'El inicio de sesión por correo está deshabilitado en Supabase. Activa el proveedor de email en Authentication > Settings.'
+                  : message
         );
       }
     } catch (err) {

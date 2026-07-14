@@ -198,7 +198,10 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                         <p className="text-xs text-gray-500">{user?.email}</p>
                       </div>
                       <button
-                        onClick={signOut}
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          void signOut();
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
@@ -210,7 +213,10 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
                 {/* Mobile logout */}
                 <button
-                  onClick={signOut}
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    void signOut();
+                  }}
                   className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
                 >
                   <LogOut className="w-5 h-5" />

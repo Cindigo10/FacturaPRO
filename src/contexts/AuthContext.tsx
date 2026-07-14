@@ -95,12 +95,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(mapUser(data.session.user, profile));
     }
 
+    if (error?.message?.includes('Email not confirmed')) {
+      return { error: null };
+    }
+
+    if (error?.message?.includes('Email logins are disabled')) {
+      return {
+        error: {
+          message: 'El inicio de sesión por correo está deshabilitado en Supabase. Activa el proveedor de email en Authentication > Settings.',
+        },
+      };
+    }
+
     return { error: error ? { message: error.message } : null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+      document.cookie = 'sb-access-token=; path=/; max-age=0';
+      document.cookie = 'sb-refresh-token=; path=/; max-age=0';
+    }
   };
 
   return (
