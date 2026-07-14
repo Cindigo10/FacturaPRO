@@ -116,7 +116,8 @@ export default function InvoiceForm({
         const result = await supabase
           .from('invoices')
           .update(invoiceData)
-          .eq('id', editId);
+          .eq('id', editId)
+          .eq('user_id', user?.id);
         error = result.error;
       } else {
         const result = await supabase.from('invoices').insert(invoiceData);
