@@ -93,6 +93,8 @@ Para desplegar en Vercel / Render, configura estas variables de entorno en el pa
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL` (opcional para Render/backend)
+- `SUPABASE_SERVICE_ROLE_KEY` (opcional para Render/backend)
 - `OPENAI_API_KEY` (si quieres OCR real)
 
 Para Vercel, el `build command` debe ser:
