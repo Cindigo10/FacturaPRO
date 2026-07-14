@@ -64,9 +64,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "select_own_profile" ON profiles;
 CREATE POLICY "select_own_profile" ON profiles FOR SELECT
-  TO authenticated USING (auth.uid() = id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  ));
+  TO authenticated USING (auth.uid() = id);
 
 DROP POLICY IF EXISTS "insert_own_profile" ON profiles;
 CREATE POLICY "insert_own_profile" ON profiles FOR INSERT
@@ -74,11 +72,7 @@ CREATE POLICY "insert_own_profile" ON profiles FOR INSERT
 
 DROP POLICY IF EXISTS "update_own_profile" ON profiles;
 CREATE POLICY "update_own_profile" ON profiles FOR UPDATE
-  TO authenticated USING (auth.uid() = id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  )) WITH CHECK (auth.uid() = id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  ));
+  TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
@@ -112,9 +106,7 @@ ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "select_own_invoices" ON invoices;
 CREATE POLICY "select_own_invoices" ON invoices FOR SELECT
-  TO authenticated USING (auth.uid() = user_id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  ));
+  TO authenticated USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "insert_own_invoices" ON invoices;
 CREATE POLICY "insert_own_invoices" ON invoices FOR INSERT
@@ -122,17 +114,11 @@ CREATE POLICY "insert_own_invoices" ON invoices FOR INSERT
 
 DROP POLICY IF EXISTS "update_own_invoices" ON invoices;
 CREATE POLICY "update_own_invoices" ON invoices FOR UPDATE
-  TO authenticated USING (auth.uid() = user_id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  )) WITH CHECK (auth.uid() = user_id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  ));
+  TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "delete_own_invoices" ON invoices;
 CREATE POLICY "delete_own_invoices" ON invoices FOR DELETE
-  TO authenticated USING (auth.uid() = user_id OR EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  ));
+  TO authenticated USING (auth.uid() = user_id);
 
 -- Audit logs table
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -157,9 +143,7 @@ CREATE POLICY "insert_audit_logs" ON audit_logs FOR INSERT
 
 DROP POLICY IF EXISTS "select_audit_logs_admin" ON audit_logs;
 CREATE POLICY "select_audit_logs_admin" ON audit_logs FOR SELECT
-  TO authenticated USING (EXISTS (
-    SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'
-  ));
+  TO authenticated USING (false);
 
 -- Function to automatically create profile on user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
