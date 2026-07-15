@@ -46,6 +46,25 @@ Deno.serve(async (req: Request) => {
     const mediaType = type || "image/jpeg";
     const base64Data = image;
 
+    if (!base64Data || base64Data.length < 1000) {
+      return new Response(
+        JSON.stringify({
+          fecha: "",
+          numero_factura: "",
+          razon_social: "",
+          ruc: "",
+          dv: "",
+          subtotal: 0,
+          itbms: 0,
+          descuento: 0,
+          total: 0,
+          descripcion: "La imagen es demasiado pequeña o borrosa para leerla con claridad.",
+          needsReview: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -54,6 +73,7 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model: "gpt-4o",
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
@@ -71,10 +91,11 @@ Deno.serve(async (req: Request) => {
 - descripcion: Descripción del producto o servicio
 
 IMPORTANTE:
-1. Si un campo no se puede leer claramente, marcar needsReview como true
-2. Validar que RUC tenga formato correcto (XXX-XXX-XXXXXX)
-3. Verificar que subtotal + itbms - descuento = total (aproximadamente)
-4. Responder ÚNICAMENTE con JSON válido, sin texto adicional
+1. Si la imagen no es legible, no inventes datos. Devuelve needsReview como true y deja los campos vacíos o en 0.
+2. Si un campo no se puede leer claramente, marca needsReview como true.
+3. Validar que RUC tenga formato correcto (XXX-XXX-XXXXXX)
+4. Verificar que subtotal + itbms - descuento = total (aproximadamente)
+5. Responder ÚNICAMENTE con JSON válido, sin texto adicional
 
 Ejemplo de respuesta:
 {"fecha": "05/05/2026", "numero_factura": "6577786", "razon_social": "ORLYN S.A.", "ruc": "630-483-123250", "dv": "16", "subtotal": 0.89, "itbms": 0.09, "descuento": 0, "total": 0.98, "descripcion": "Bebida con 10% ITBMS", "needsReview": false}`
@@ -107,7 +128,11 @@ Ejemplo de respuesta:
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error("OpenAI returned no content");
+    }
 
     // Parse the JSON response
     let extractedData;
@@ -132,8 +157,14 @@ Ejemplo de respuesta:
       descuento: parseFloat(extractedData.descuento) || 0,
       total: parseFloat(extractedData.total) || 0,
       descripcion: extractedData.descripcion || "",
-      needsReview: extractedData.needsReview || false
+      needsReview: extractedData.needsReview === true
     };
+
+    const hasUsefulData = Boolean(result.razon_social || result.numero_factura || result.total || result.ruc || result.fecha);
+    if (!hasUsefulData) {
+      result.needsReview = true;
+      result.descripcion = "No se pudo leer con claridad la factura. Intente con una imagen más nítida.";
+    }
 
     // Verify totals
     const calculatedTotal = result.subtotal + result.itbms - result.descuento;
@@ -149,8 +180,20 @@ Ejemplo de respuesta:
   } catch (error) {
     console.error("OCR Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        fecha: "",
+        numero_factura: "",
+        razon_social: "",
+        ruc: "",
+        dv: "",
+        subtotal: 0,
+        itbms: 0,
+        descuento: 0,
+        total: 0,
+        descripcion: "No se pudo analizar la factura. Intente con una imagen más nítida o revise los datos manualmente.",
+        needsReview: true,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
